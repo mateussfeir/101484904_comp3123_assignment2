@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=8080
+      - MONGO_URI=mongodb://mongo:27017/comp3123
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend/101484904_comp3123_assignment2_reactjs
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://backend:8080/api/v1
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
